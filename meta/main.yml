@@ -1,0 +1,18 @@
+galaxy_info:
+  role_name: sendmail-smtp-auth
+  author: hideaki kurita
+  description: sendmail-smtp-auth
+
+  license: license (BSD, MIT)
+
+  min_ansible_version: 2.5
+
+  platforms:
+    - name: FreeBSD 
+      versions:
+      - 11.1
+      - 11.2
+
+  galaxy_tags: []
+
+dependencies: []

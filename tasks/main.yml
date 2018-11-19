@@ -1,0 +1,55 @@
+---
+- name: Install sasl-saslauthd
+  pkgng: name={{ item }} state=present
+  with_items:
+    - gtar
+    - cyrus-sasl-saslauthd
+
+- name: Enable saslauthd
+  service: name=saslauthd enabled=yes
+
+- name: Start saslauthd
+  service: name=saslauthd state=started
+
+- name: Check if src is installed
+  stat: path=/usr/src/bin
+  register: usr_src_bin
+
+- block:
+  - name: Download src file
+    get_url:
+      url: "ftp://ftp.freebsd.org/pub/FreeBSD/releases/amd64/{{ ansible_facts.distribution_version }}-RELEASE/src.txz"
+      dest: /src.txz
+
+  - name: Unpack src
+    unarchive:
+      src: /src.txz
+      dest: /
+      copy: no
+  when: not usr_src_bin.stat.exists
+
+- name: Edit /etc/make.conf
+  blockinfile:
+    dest: /etc/make.conf
+    block: |
+      SENDMAIL_CFLAGS=-I/usr/local/include/sasl -DSASL
+      SENDMAIL_LDFLAGS=-L/usr/local/lib
+      SENDMAIL_LDADD=-lsasl2
+    backup: yes
+    create: yes
+
+- name: Compile sendmail
+  shell: >
+    cd /usr/src/lib/libsmutil &&
+    make cleandir && make obj && make &&
+    cd /usr/src/lib/libsm &&
+    make cleandir && make obj && make && 
+    cd /usr/src/usr.sbin/sendmail &&
+    make cleandir && make obj && make && make install  
+  args:
+    creates: /usr/obj/usr/src/usr.sbin/sendmail/sendmail
+  notify: restart sendmail
+
+- name: Copy Sendmail.conf
+  copy: src=Sendmail.conf dest=/usr/local/lib/sasl2/Sendmail.conf mode=0644 backup=yes
+  notify: restart saslauthd 
