@@ -1,7 +1,7 @@
 galaxy_info:
-  role_name: sendmail-smtp-auth
+  role_name: sendmail_smtp_auth
   author: hideaki kurita
-  description: sendmail-smtp-auth
+  description: sendmail_smtp_auth
 
   license: license (BSD, MIT)
 
