@@ -48,7 +48,7 @@
     make cleandir && make obj && make && make install  
   args:
     creates: /usr/obj/usr/src/usr.sbin/sendmail/sendmail
-  notify: restart sendmail
+#  notify: restart sendmail
 
 - name: Copy Sendmail.conf
   copy: src=Sendmail.conf dest=/usr/local/lib/sasl2/Sendmail.conf mode=0644 backup=yes
