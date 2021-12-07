@@ -15,5 +15,3 @@ galaxy_info:
 
   galaxy_tags: []
 
-dependencies:
-  - kurita0.freebsd_bootstrap

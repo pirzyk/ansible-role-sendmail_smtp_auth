@@ -1,14 +1,31 @@
 ---
-- name: Install sasl-saslauthd
-  pkgng: name={{ item }} state=present
-  with_items:
-    - cyrus-sasl-saslauthd
+#- name: Install sasl-saslauthd
+#  pkgng: name={{ item }} state=present
+#  with_items:
+#    - cyrus-sasl-saslauthd
 
 - name: Enable saslauthd
   service: name=saslauthd enabled=yes
 
 - name: Start saslauthd
   service: name=saslauthd state=started
+
+- name: Check to see if sendmail has already been compiled with SASL support
+  become: False
+  check_mode: no
+  ignore_errors: true
+  register: sendmail_compile_flags
+  shell:
+    cmd: '/usr/sbin/sendmail -d0.1 < /dev/null'
+    warn: no
+
+- name: Is SASL compiled in sendmail
+  set_fact:
+    sasl_compiled_sendmail: "{{ True if 'SASLv2' in sendmail_compile_flags.stdout else False }}"
+
+- name: Display what we found
+  debug:
+    msg: "sasl_compiled_sendmail is {{ sasl_compiled_sendmail }}"
 
 - name: Check if src is installed
   stat: path=/usr/src/bin
@@ -25,7 +42,7 @@
       src: /src.txz
       dest: /
       copy: no
-  when: not usr_src_bin.stat.exists
+  when: not sasl_compiled_sendmail|bool and not usr_src_bin.stat.exists
 
 - name: Edit /etc/make.conf
   blockinfile:
@@ -36,6 +53,7 @@
       SENDMAIL_LDADD=-lsasl2
     backup: yes
     create: yes
+  when: not sasl_compiled_sendmail|bool
 
 - name: Compile sendmail
   shell: >
@@ -47,6 +65,7 @@
     make cleandir && make obj && make && make install  
   args:
     creates: /usr/obj/usr/src/usr.sbin/sendmail/sendmail
+  when: not sasl_compiled_sendmail|bool
   notify: restart sendmail
 
 - name: Copy Sendmail.conf
