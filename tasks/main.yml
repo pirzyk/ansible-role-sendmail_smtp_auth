@@ -11,13 +11,11 @@
   service: name=saslauthd state=started
 
 - name: Check to see if sendmail has already been compiled with SASL support
-  become: False
   check_mode: no
-  ignore_errors: true
   register: sendmail_compile_flags
-  shell:
-    cmd: '/usr/sbin/sendmail -d0.1 < /dev/null'
-    warn: no
+  ansible.builtin.command:
+    cmd: '/usr/sbin/sendmail -bt -d0.1'
+    stdin: '/dev/null'
 
 - name: Is SASL compiled in sendmail
   set_fact:
